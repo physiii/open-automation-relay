@@ -442,8 +442,9 @@ io.on('connection', function (socket) {
     var device_index = find_index(device_objects,'token',data.token);
     if (device_index < 0) return console.log(TAG,"device not found",data.mac);
     if (!device_objects[device_index].socket) return console.log(TAG,"socket not found",data.mac);
-    //console.log(TAG,"get_camera_preview",data.mac);
+    data.socket_id = socket.id;
     device_objects[device_index].socket.emit('get camera preview',data);
+    console.log(TAG,"get_camera_preview",device_objects[device_index].mac,device_objects[device_index].socket.id);
   });
 
   socket.on('camera preview', function (data) {
@@ -454,13 +455,10 @@ io.on('connection', function (socket) {
     var group_index = find_index(groups,'group_id',mac);
     if (group_index < 0) return console.log("camera preview | group not found");
     for (var i=0; i < groups[group_index].members.length; i++) {
-          //console.log(TAG,'camera preview1',mac,groups[group_index].members[i]);
       for (var j=0; j < user_objects.length; j++) {
-          //console.log(TAG,'camera preview2',mac,user_objects[j].user);
-        if (user_objects[j].user == groups[group_index].members[i]) {
-          user_objects[j].socket.emit('camera preview',data);
-          //console.log(TAG,'camera preview3',mac,user_objects[j].user);
-        }
+        if (user_objects[j].socket.id != data.socket_id) {console.log(TAG,'same user but different socket',data.socket_id,user_objects[j].socket.id);continue}
+        //if (user_objects[j].user != groups[group_index].members[i]) continue;
+        user_objects[j].socket.emit('camera preview',data);
       }
     }
   });
